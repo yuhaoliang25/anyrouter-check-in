@@ -1,0 +1,9 @@
+name: Test International Access
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -I https://www.google.com  # Works directly
+      - run: npm install express             # Works directly
+      - run: pip install requests            # Works directly
