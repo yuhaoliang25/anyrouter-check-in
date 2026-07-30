@@ -5,5 +5,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: curl -I https://www.google.com  # Works directly
-      - run: npm install express             # Works directly
-      - run: pip install requests            # Works directly
+      - run: curl -I https://agentrouter.org
