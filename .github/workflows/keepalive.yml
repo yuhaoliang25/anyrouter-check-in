@@ -1,23 +1,37 @@
-name: My Scheduled Workflow
+name: Keep Repository Alive
+
 on:
   schedule:
-    - cron: "0 0 * * *" # 每天午夜运行
+    # 每天 UTC 时间 00:00 运行 (北京时间 08:00)
+    # 如果你想在北京时间午夜运行，可以改为 '0 16 * * *'
+    - cron: '0 0 1 * *'
+  workflow_dispatch: # 允许在 GitHub 网页端手动触发测试
 
 jobs:
-  main-job:
-    name: Main Job
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      # ... 你的主要业务逻辑 ...
-
-  keepalive-job:
-    name: Keepalive Workflow
-    if: ${{ always() }} # 确保即使主任务失败，保活任务也会运行
-    needs: main-job
+  auto-commit:
+    name: Create empty commit
     runs-on: ubuntu-latest
     permissions:
-      actions: write # v2 版本只需要 actions 写入权限，不需要 contents 写入权限
+      contents: write  # 授予 Actions 写入仓库内容的权限
+    
     steps:
-      - uses: actions/checkout@v4
-      - uses: gautamkrishnar/keepalive-workflow@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # 注意：如果你的默认分支（如 main）开启了分支保护规则，
+          # 默认的 GITHUB_TOKEN 将无法推送。你需要取消下面的注释，
+          # 并在仓库 Secrets 中配置一个具有 repo 权限的 PAT (Personal Access Token)
+          # token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create and push empty commit
+        run: |
+          # 生成带有当前时间戳的空提交
+          git commit --allow-empty -m "chore: keep alive 🚀 - $(date)"
+          # 推送到远程仓库
+          git push
