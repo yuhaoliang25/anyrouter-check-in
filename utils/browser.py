@@ -383,16 +383,38 @@ def _extract_user_profile(payload: object) -> dict | None:
 	return None
 
 
+# async def _parse_user_self_response(response) -> dict | None:
+# 	if USER_SELF_API_SUFFIX not in response.url or response.status != 200:
+# 		return None
+# 	try:
+# 		payload = await response.json()
+# 	except Exception:  # nosec B110
+# 		return None
+# 	return _extract_user_profile(payload)
+
 async def _parse_user_self_response(response) -> dict | None:
-	if USER_SELF_API_SUFFIX not in response.url or response.status != 200:
-		return None
-	try:
-		payload = await response.json()
-	except Exception:  # nosec B110
-		return None
-	return _extract_user_profile(payload)
+    if USER_SELF_API_SUFFIX not in response.url:
+        return None
 
+    print(f'[DEBUG] {USER_SELF_API_SUFFIX} status={response.status} url={response.url}')
 
+    try:
+        payload = await response.json()
+        print(f'[DEBUG] {USER_SELF_API_SUFFIX} raw JSON: {payload}')
+    except Exception as exc:
+        print(f'[DEBUG] {USER_SELF_API_SUFFIX} response is not valid JSON: {exc}')
+        try:
+            raw_body = await response.text()
+            print(f'[DEBUG] {USER_SELF_API_SUFFIX} raw body: {raw_body}')
+        except Exception as body_exc:
+            print(f'[DEBUG] {USER_SELF_API_SUFFIX} raw body unavailable: {body_exc}')
+        return None
+
+    if response.status != 200:
+        return None
+
+    return _extract_user_profile(payload)
+	
 async def is_logged_in(page: Page) -> bool:
 	"""快速判断：是否在 /console，或仍停留在登录页。"""
 	url = page.url.lower()
